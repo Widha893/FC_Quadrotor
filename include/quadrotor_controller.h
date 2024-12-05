@@ -29,8 +29,11 @@ void hitl_controller(double setpoint, double vz, double target_alt, uint8_t dt) 
     alt_now = altitude;
     // alt_vel = (alt_now - alt_last) / dt;
     double error_roll = setpoint - roll;
+    double error_roll_dt = error_roll / dt;
     double error_pitch = setpoint - pitch;
+    double error_pitch_dt = error_pitch / dt;
     double error_yaw = setpoint - yaw;
+    double error_yaw_dt = error_yaw / dt;
     double error_altitude = target_alt - altitude;
 
     if (abs(error_roll) < 10.0f) {
@@ -42,10 +45,10 @@ void hitl_controller(double setpoint, double vz, double target_alt, uint8_t dt) 
         pitch_integrator = constrain(pitch_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
     }
 
-    total_force = (kp_altitude * error_altitude) + (kd_altitude * alt_vel);
-    torque_x = (kp_roll * error_roll) + (kd_roll * roll_vel) + (roll_integrator*ki_roll);
-    torque_y = (kp_pitch * error_pitch) + (kd_pitch * pitch_vel) + (pitch_integrator*ki_pitch);
-    torque_z = (kp_yaw * error_yaw) + (kd_yaw * yaw_vel);
+    total_force = (-kp_altitude * error_altitude) + (-kd_altitude * alt_vel);
+    torque_x = (-kp_roll * error_roll) + (-kd_roll * roll_vel) + (-roll_integrator*ki_roll);
+    torque_y = (-kp_pitch * error_pitch) + (-kd_pitch * pitch_vel) + (-pitch_integrator*ki_pitch);
+    torque_z = (-kd_yaw * yaw_vel);
 }
 
 #endif

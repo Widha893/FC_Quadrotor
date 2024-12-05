@@ -33,6 +33,12 @@ void loop() {
             pitch = msg.sensors.pitch;
             pitch_vel = msg.sensors.angular_vel_y * RAD_TO_DEG;
             yaw = msg.sensors.yaw;
+            if (yaw > 180.0f){
+                yaw -= 360.0f;
+            }
+            else if (yaw < -180.0f){
+                yaw += 360.0f;
+            }
             yaw_vel = msg.sensors.angular_vel_z * RAD_TO_DEG;
             altitude = msg.sensors.altitude * 100.0;
         }
@@ -42,13 +48,15 @@ void loop() {
         msg.controls.torque_y = torque_y;
         msg.controls.torque_z = torque_z;
         msg.controls.total_force = total_force;
-        Serial7.println(torque_x);
-        Serial7.println(torque_y);
-        Serial7.println(torque_z);
-        Serial7.println(alt_now);
-        Serial7.println(alt_last);
-        Serial7.println(alt_vel);
-        Serial7.println(total_force);
+        msg.has_controls = true;
+        send_message(msg);
+        // Serial7.println(torque_x);
+        // Serial7.println(torque_y);
+        // Serial7.println(torque_z);
+        // Serial7.println(alt_now);
+        // Serial7.println(alt_last);
+        // Serial7.println(alt_vel);
+        // Serial7.println(total_force);
     }
     while (micros() - loop_timer < LOOP_INTERVAL) {}
     loop_timer = micros();
