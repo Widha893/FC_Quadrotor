@@ -4,5 +4,6 @@
     "limits": "cpp",
     "*.inc": "cpp",
     "functional": "cpp"
-  }
+  },
+  "ros.distro": "humble"
 }

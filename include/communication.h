@@ -35,6 +35,7 @@ void send_message(HWIL_msg &msg) {
     buffer[2] = stream.bytes_written & 0xFF; // Message size
 
     Serial.write(buffer, stream.bytes_written + 4);
+    Serial7.println("Message sent");
 }
 
 bool receive_message() {
