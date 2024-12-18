@@ -128,7 +128,7 @@ void loop() {
         // received_data();
         Serial7.print(" ");
         Serial7.println(torque_x);
-        msg.controls.torque_x = torque_x + roll_disturbance;
+        msg.controls.torque_x = torque_x;
         msg.controls.torque_y = torque_y;
         msg.controls.torque_z = torque_z;
         msg.controls.total_force = total_force;

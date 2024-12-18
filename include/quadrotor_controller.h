@@ -3,7 +3,12 @@
 
 #include <Arduino.h>
 #include <communication.h>
+#include <math.h>
 #define INTEGRAL_LIMIT 10.0f
+#define MAX_VALUE 25.0f
+#define MIN_VALUE -25.0f
+#define MAX_VALUE_YAW 10.0f
+#define MIN_VALUE_YAW -10.0f
 
 double torque_x, torque_y, torque_z, total_force;
 double roll_integrator, pitch_integrator, yaw_integrator, altitude_integrator;
@@ -25,31 +30,37 @@ void init_gains() {
     kd_altitude = 0.0;
 }
 
-void hitl_controller(double setpoint, double setpoint_roll, double setpoint_pitch, double vz, double target_alt, uint8_t dt) {
+void hitl_controller(double setpoint_yaw, double setpoint_roll, double setpoint_pitch, double vz, double target_alt, uint8_t dt) {
     alt_last = alt_now;
     alt_now = altitude;
     // alt_vel = (alt_now - alt_last) / dt;
     double error_roll = setpoint_roll - roll;
-    double error_roll_dt = setpoint_roll - roll_vel;
     double error_pitch = setpoint_pitch - pitch;
-    double error_pitch_dt = setpoint_pitch - pitch_vel;
-    double error_yaw = setpoint - yaw;
-    double error_yaw_dt = setpoint - yaw_vel;
+    double error_yaw = setpoint_yaw - yaw;
     double error_altitude = target_alt - altitude;
 
-    if (abs(error_roll) < 10.0f) {
-        roll_integrator += error_roll * dt;
-        roll_integrator = constrain(roll_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
-    }
-    if (abs(error_pitch) < 10.0f) {
-        pitch_integrator += error_pitch * dt;
-        pitch_integrator = constrain(pitch_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
-    }
+    // if (abs(error_roll) < 10.0f) {
+    //     roll_integrator += error_roll * dt;
+    //     roll_integrator = constrain(roll_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
+    // }
+    // if (abs(error_pitch) < 10.0f) {
+    //     pitch_integrator += error_pitch * dt;
+    //     pitch_integrator = constrain(pitch_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
+    // }
+    double p_roll = kp_roll * error_roll;
+    double d_roll = kd_roll * (setpoint_roll-roll_vel);
+    double p_pitch = kp_pitch * error_pitch;
+    double d_pitch = kd_pitch * (setpoint_pitch-pitch_vel);
+    double p_yaw = kp_yaw * (setpoint_yaw - yaw_vel);
 
-    total_force = (-kp_altitude * error_altitude) + (-kd_altitude * alt_vel);
-    torque_x = (-kp_roll * error_roll) + (-kd_roll * roll_vel) + (roll_integrator*-ki_roll);
-    torque_y = (-kp_pitch * error_pitch) + (-kd_pitch * pitch_vel) + (pitch_integrator*-ki_pitch);
-    torque_z = (-kd_yaw * error_yaw_dt);
+    total_force = (kp_altitude * error_altitude) + (-kd_altitude * alt_vel);
+    torque_x = p_roll + d_roll;
+    torque_y = p_pitch + d_pitch;
+    torque_z = p_yaw;
+
+    torque_x = constrain(torque_x, MIN_VALUE, MAX_VALUE);
+    torque_y = constrain(torque_y, MIN_VALUE, MAX_VALUE);
+    torque_z = constrain(torque_z, MIN_VALUE_YAW, MAX_VALUE_YAW);
 }
 
 #endif
