@@ -35,6 +35,7 @@ void send_message(HWIL_msg &msg) {
     buffer[2] = stream.bytes_written & 0xFF; // Message size
 
     Serial.write(buffer, stream.bytes_written + 4);
+    // Serial.flush();
     Serial7.println("Message sent");
 }
 
@@ -73,6 +74,18 @@ bool receive_message() {
     }
 
     return true;
+}
+
+void send_message_as_string(double tx, double ty, double tz, double tf) {
+    // Prepare string data
+    String message = String(tx) + "," +
+                     String(ty) + "," +
+                     String(tz) + "," +
+                     String(tf);
+
+    // Send the message with a start marker '<' and an end marker '>'
+    Serial.println("<" + message + ">");
+    Serial7.println("Message sent as string");
 }
 
 #endif // COMMUNICATION_H

@@ -4,31 +4,31 @@
 #include <Arduino.h>
 #include <communication.h>
 #include <math.h>
+#include "imu_hitl.h"
 #define INTEGRAL_LIMIT 10.0f
-#define MAX_VALUE 25.0f
-#define MIN_VALUE -25.0f
+#define MAX_VALUE 13.0f
+#define MIN_VALUE -13.0f
 #define MAX_VALUE_YAW 10.0f
 #define MIN_VALUE_YAW -10.0f
 
 double torque_x, torque_y, torque_z, total_force;
 double roll_integrator, pitch_integrator, yaw_integrator, altitude_integrator;
-double kp_roll, kd_roll, kp_pitch, kd_pitch, kp_yaw, kd_yaw, kp_altitude, kd_altitude;
-double roll, roll_vel, pitch, pitch_vel, yaw, yaw_vel, altitude;
+double altitude;
 double roll_setpoint, pitch_setpoint, roll_disturbance, pitch_disturbance;
 double alt_last, alt_now, alt_vel;
-double ki_roll = 0.0;
-double ki_pitch = 0.0;
+double ki_roll = 0.0f;
+double ki_pitch = 0.0f;
 
-void init_gains() {
-    kp_roll = 0.0;
-    kd_roll = 0.0;
-    kp_pitch = 0.0;
-    kd_pitch = 0.0;
-    kp_yaw = 0.0;
-    kd_yaw = 0.0;
-    kp_altitude = 0.0;
-    kd_altitude = 0.0;
-}
+struct Gains {
+    double alt = 0.0f;
+    double vz = 0.0f;
+    double roll = 7.071;
+    double p = 3.825;
+    double pitch = 7.071;
+    double q = 3.825;
+    double yaw = 6.856;// 6.856
+    double r = 1.729f;//1.729
+} gain;
 
 void hitl_controller(double setpoint_yaw, double setpoint_roll, double setpoint_pitch, double vz, double target_alt, uint8_t dt) {
     alt_last = alt_now;
@@ -47,13 +47,13 @@ void hitl_controller(double setpoint_yaw, double setpoint_roll, double setpoint_
     //     pitch_integrator += error_pitch * dt;
     //     pitch_integrator = constrain(pitch_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
     // }
-    double p_roll = kp_roll * error_roll;
-    double d_roll = kd_roll * (setpoint_roll-roll_vel);
-    double p_pitch = kp_pitch * error_pitch;
-    double d_pitch = kd_pitch * (setpoint_pitch-pitch_vel);
-    double p_yaw = kp_yaw * (setpoint_yaw - yaw_vel);
+    double p_roll = gain.roll * error_roll;
+    double d_roll = gain.p * (setpoint_roll-gyroX);
+    double p_pitch = gain.pitch * error_pitch;
+    double d_pitch = gain.q * (setpoint_pitch-gyroY);
+    double p_yaw = gain.yaw * (setpoint_yaw-gyroZ);
 
-    total_force = (kp_altitude * error_altitude) + (-kd_altitude * alt_vel);
+    total_force = (gain.alt * error_altitude) + (gain.vz * alt_vel);
     torque_x = p_roll + d_roll;
     torque_y = p_pitch + d_pitch;
     torque_z = p_yaw;

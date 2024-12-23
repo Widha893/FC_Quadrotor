@@ -9,9 +9,6 @@
 PB_BIND(HWIL_msg, HWIL_msg, AUTO)
 
 
-PB_BIND(HWIL_msg_Gains, HWIL_msg_Gains, AUTO)
-
-
 PB_BIND(HWIL_msg_SensorData, HWIL_msg_SensorData, AUTO)
 
 
