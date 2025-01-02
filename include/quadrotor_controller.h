@@ -22,10 +22,10 @@ double ki_pitch = 0.0f;
 struct Gains {
     double alt = 0.0f;
     double vz = 0.0f;
-    double roll = 7.071;
-    double p = 3.825;
-    double pitch = 7.071;
-    double q = 3.825;
+    double roll = 6.856;
+    double p = 4.193;
+    double pitch = 8.062;
+    double q = 4.342;
     double yaw = 6.856;// 6.856
     double r = 1.729f;//1.729
 } gain;
