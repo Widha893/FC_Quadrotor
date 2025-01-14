@@ -6,8 +6,8 @@
 #include <math.h>
 #include "imu_hitl.h"
 #define INTEGRAL_LIMIT 10.0f
-#define MAX_VALUE 13.0f
-#define MIN_VALUE -13.0f
+#define MAX_VALUE 15.0f
+#define MIN_VALUE -15.0f
 #define MAX_VALUE_YAW 10.0f
 #define MIN_VALUE_YAW -10.0f
 
@@ -22,10 +22,10 @@ double ki_pitch = 0.0f;
 struct Gains {
     double alt = 0.0f;
     double vz = 0.0f;
-    double roll = 6.856;
-    double p = 4.193;
-    double pitch = 8.062;
-    double q = 4.342;
+    double roll = 6.324;
+    double p = 4.296;
+    double pitch = 5.477;
+    double q = 2.874;
     double yaw = 6.856;// 6.856
     double r = 1.729f;//1.729
 } gain;

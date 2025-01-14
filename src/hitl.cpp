@@ -8,8 +8,8 @@
 
 uint32_t loop_timer;
 unsigned long previous_millis = 0;  // Stores the last time the setpoint was changed
-unsigned long interval_on = 500;    // 2 seconds to stay at 25 degrees
-unsigned long interval_off = 5000;   // 5 seconds cycle
+unsigned long interval_on = 1000;    // 2 seconds to stay at 25 degrees
+unsigned long interval_off = 3000;   // 5 seconds cycle
 bool is_on = false;  // Flag to check if we are in the "on" state
 double disturbance_interval = 10000000.0f; // 10 seconds
 double disturbance_duration = 1000000.0f; // 0.5 second
@@ -101,14 +101,14 @@ void loop() {
         {
             getIMUdata();
         }
-        if (msg.has_command)
-        {
-            roll_setpoint = msg.command.roll;
-            pitch_setpoint = msg.command.pitch;
-        }
+        // if (msg.has_command)
+        // {
+        //     roll_setpoint = msg.command.roll;
+        //     pitch_setpoint = msg.command.pitch;
+        // }
         alt_vel = (alt_now - alt_last) / DT;
         control_disturbance();
-        hitl_controller(0.0, 0.0, 0.0, alt_vel, 150.0, DT);
+        hitl_controller(0.0, roll_disturbance, 0.0, alt_vel, 150.0, DT);
         // received_data();
         // if (millis() % 1000 == 0.0){
         //     init1 += 1.0f;
