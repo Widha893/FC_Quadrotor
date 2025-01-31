@@ -1,3 +1,6 @@
+#ifndef RADIO_H
+#define RADIO_H
+
 #include <Arduino.h>
 #include <sbus.h>
 
@@ -62,11 +65,16 @@ void remote_loop() {
       failsafe();
       return;
     }
+    // for (int i=0;i<5;i++) {
+    //     Serial.print(data.ch[i]);
+    //     Serial.print(" ");
+    // }
+    // Serial.println();
 
-    ch_roll = data.ch[0] * 0.615f + 890;
-    ch_pitch = data.ch[1] * 0.615f + 890;
-    ch_throttle = data.ch[2] * 0.615f + 890;
-    ch_yaw = data.ch[3] * 0.615f + 890;
+    ch_roll = data.ch[0] * 0.611f + 895;
+    ch_pitch = data.ch[1] * 0.611f + 895;
+    ch_throttle = data.ch[2] * 0.611f + 895;
+    ch_yaw = data.ch[3] * 0.611f + 895;
 
     ch_roll = constrain(ch_roll, 1000, 2000);
     ch_pitch = constrain(ch_pitch, 1000, 2000);
@@ -74,12 +82,18 @@ void remote_loop() {
     ch_yaw = constrain(ch_yaw, 1000, 2000);
 
     arming = data.ch[4] > 1500 ? true : false;
+    if (arming) { digitalWrite(2, HIGH); }
+    else { digitalWrite(2, LOW); }
     alt_hold_mode = data.ch[5] > 1500 ? true : false;
   }
 }
 
 float roll_scaler() {
     return (ch_roll - 1500) / 500.0f;
+}
+
+float throttle_scaler() {
+    return (ch_throttle - 1000) / 1000.0f;
 }
 
 float pitch_scaler() {
@@ -89,3 +103,5 @@ float pitch_scaler() {
 float yaw_scaler() {
     return (ch_yaw - 1500) / 500.0f;
 }
+
+#endif

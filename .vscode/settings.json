@@ -3,7 +3,8 @@
     "string": "cpp",
     "limits": "cpp",
     "*.inc": "cpp",
-    "functional": "cpp"
+    "functional": "cpp",
+    "cmath": "cpp"
   },
   "ros.distro": "humble"
 }
