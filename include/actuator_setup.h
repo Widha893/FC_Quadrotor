@@ -47,6 +47,19 @@ void writeMotors(int motor_1, int motor_2, int motor_3, int motor_4) {
     }
 }
 
+void motor_calibration() {
+    motor1.writeMicroseconds(2000);
+    motor2.writeMicroseconds(2000);
+    motor3.writeMicroseconds(2000);
+    motor4.writeMicroseconds(2000);
+    delay(2000);
+    motor1.writeMicroseconds(1000);
+    motor2.writeMicroseconds(1000);
+    motor3.writeMicroseconds(1000);
+    motor4.writeMicroseconds(1000);
+    delay(1000);
+}
+
 void thrust_check(int ch) {
     if (arming) {
         motor1.writeMicroseconds(ch);

@@ -12,11 +12,12 @@ float vertical_velocity = 0.1;
 float roll = 0.0, pitch = 0.0, yaw = 0.0;
 float gxrs = 0.0, gyrs = 0.0, gzrs = 0.0;
 float yaw_sp = 0.0, last_yaw = 0.0;
-float roll_error = -1.06f, pitch_error = 1.69f;
+float roll_error = -1.75, pitch_error = 2.19;
 // float roll_error = 0.00, pitch_error = 0.00;
 //  r:-1.19 p:2.56 y:360.00
 struct bno055_t myBNO;
-unsigned char accelCalibStatus = 0;  // Variable to hold the calibration status of the Accelerometer
+unsigned char accelCalibStatus = 0;  // Variable t
+//o hold the calibration status of the Accelerometer
 unsigned char magCalibStatus = 0;    // Variable to hold the calibration status of the Magnetometer
 unsigned char gyroCalibStatus = 0;   // Variable to hold the calibration status of the Gyroscope
 unsigned char sysCalibStatus = 0;    // Variable to hold the calibration status of the System (BNO055's MCU)

@@ -6,13 +6,13 @@
 #include "Radio.h"
 #include "bno055.h"
 #define INTEGRAL_LIMIT 10.0f
-#define MAX_VALUE 30.0f
-#define MIN_VALUE -30.0f
+#define MAX_VALUE 50.0f
+#define MIN_VALUE -50.0f
 #define MIN_THRUST 30.0f
 #define MAX_MOTOR_SPEED 1025.38f
 #define MIN_MOTOR_SPEED 0.0f
-#define MAX_VALUE_YAW 10.0f
-#define MIN_VALUE_YAW -10.0f
+#define MAX_VALUE_YAW 50.0f
+#define MIN_VALUE_YAW -50.0f
 #define MAX_ROLL 25.0f
 #define MAX_PITCH 25.0f
 #define MAX_YAW 25.0f
@@ -23,6 +23,9 @@
 float u1, u2, u3, u4;
 float roll_integrator, pitch_integrator, yaw_integrator, altitude_integrator;
 float setpoint_roll, setpoint_pitch, setpoint_yaw, target_alt;
+float setpoint_roll_last, setpoint_pitch_last, setpoint_yaw_last, target_alt_last;
+float setpoint_roll_now, setpoint_pitch_now, setpoint_yaw_now, target_alt_now;
+float setpoint_roll_rate, setpoint_pitch_rate, setpoint_yaw_rate;
 float state_yaw;
 float altitude;
 float alt_last, alt_now, alt_vel;
@@ -33,6 +36,7 @@ float motor_thrust[4];
 float motor_speed_rpm[4];
 float motor_speed_squared[4];
 float motor1_pwm, motor2_pwm, motor3_pwm, motor4_pwm;
+uint8_t t_now, t_last, dt;
 
 // Hitung Lagi!!!
 // const double A_invers[4][4] = {{292600, -1300300,  1300300,  6283300},
@@ -62,8 +66,8 @@ struct Gains {
     float p = 4.144;
     float pitch = 5.196;
     float q = 3.341;
-    float yaw = 3.856; // 6.324
-    float r = 1.729; // 1.160
+    float yaw = 0.0; // 6.324
+    float r = 0.0; // 1.160
 } gain;
 
 float constrain_value(float value, float min, float max) {
@@ -77,30 +81,42 @@ float constrain_value(float value, float min, float max) {
 }
 
 void drone_controller() {
+    t_now = micros();
+    dt = t_now - t_last;
+    t_last = t_now;
+
+    setpoint_roll_last = setpoint_roll_now;
+    setpoint_roll_now = setpoint_roll;
+
+    setpoint_pitch_last = setpoint_pitch_now;
+    setpoint_pitch_now = setpoint_pitch;
+
+    setpoint_yaw_last = setpoint_yaw_now;
+    setpoint_yaw_now = setpoint_yaw;
+
+    if (dt > 0) {
+        setpoint_roll_rate = (setpoint_roll_now - setpoint_roll_last) / dt;
+        setpoint_pitch_rate = (setpoint_pitch_now - setpoint_pitch_last) / dt;
+        setpoint_yaw_rate = (setpoint_yaw_now - setpoint_yaw_last) / dt;
+    } else {
+        setpoint_roll_rate = 0.0f;
+        setpoint_pitch_rate = 0.0f;
+        setpoint_yaw_rate = 0.0f;
+    }
+
     alt_last = alt_now;
     alt_now = altitude;
-    // alt_vel = (alt_now - alt_last) / dt;
-
-    // state_yaw = yaw;
-    // if (state_yaw > 180.0f) { state_yaw -= 360.0f; }
-    // if (state_yaw < -180.0f) { state_yaw += 360.0f; }
+    alt_vel = (alt_now - alt_last) / dt;
 
     float error_roll = roll - setpoint_roll;
-    float error_roll_rate = gxrs;
+    float error_roll_rate = gxrs - setpoint_roll_rate;
     float error_pitch = pitch - setpoint_pitch;
-    float error_pitch_rate = gyrs;
+    float error_pitch_rate = gyrs - setpoint_pitch_rate;
     float error_yaw = yaw - setpoint_yaw;
-    float error_yaw_rate = gzrs;
+    float error_yaw_rate = gzrs - setpoint_yaw_rate;
     float error_altitude = target_alt - altitude;
 
-    // if (abs(error_roll) < 10.0f) {
-    //     roll_integrator += error_roll * dt;
-    //     roll_integrator = constrain(roll_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
-    // }
-    // if (abs(error_pitch) < 10.0f) {
-    //     pitch_integrator += error_pitch * dt;
-    //     pitch_integrator = constrain(pitch_integrator, -INTEGRAL_LIMIT, INTEGRAL_LIMIT);
-    // }
+    /* u = -k * (state - setpoint) */
     float p_roll = -gain.roll * error_roll;
     float d_roll = -gain.p * error_roll_rate;
     float p_pitch = -gain.pitch * error_pitch;
