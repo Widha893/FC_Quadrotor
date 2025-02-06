@@ -5,10 +5,10 @@
 #include <Servo.h>
 #include "Radio.h"
 
-#define MOTOR1 12
-#define MOTOR2 11
-#define MOTOR3 10
-#define MOTOR4 9
+#define MOTOR1 9
+#define MOTOR2 7
+#define MOTOR3 6
+#define MOTOR4 5
 
 Servo motor1, motor2, motor3, motor4;
 

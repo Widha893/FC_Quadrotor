@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 // #include <imu.h>
+#include <EEPROM.h>
 
 #include "BNO055_support.h"  //Contains the bridge code between the API and Arduino
 
@@ -12,7 +13,7 @@ float vertical_velocity = 0.1;
 float roll = 0.0, pitch = 0.0, yaw = 0.0;
 float gxrs = 0.0, gyrs = 0.0, gzrs = 0.0;
 float yaw_sp = 0.0, last_yaw = 0.0;
-float roll_error = -1.75, pitch_error = 2.19;
+float roll_error = 0.0, pitch_error = 0.0;
 // float roll_error = 0.00, pitch_error = 0.00;
 //  r:-1.19 p:2.56 y:360.00
 struct bno055_t myBNO;
@@ -32,35 +33,7 @@ unsigned char sys_calib_status = 0;
 unsigned char mag_calib_status = 0;
 unsigned long last_time = 0;
 
-void bno055_calibration() {
-    if ((millis() - last_Time) >= 200)  // To read calibration status at 5 Hz without using additional timers
-    {
-        last_Time = millis();
-
-        Serial.print("Time Stamp: ");  // To read out the Time Stamp
-        Serial.println(last_Time);
-
-        bno055_get_accelcalib_status(&accelCalibStatus);
-        Serial.print("Accelerometer Calibration Status: ");  // To read out the Accelerometer Calibration Status (0-3)
-        Serial.println(accelCalibStatus);
-
-        bno055_get_magcalib_status(&magCalibStatus);
-        Serial.print("Magnetometer Calibration Status: ");  // To read out the Magnetometer Calibration Status (0-3)
-        Serial.println(magCalibStatus);
-
-        bno055_get_magcalib_status(&gyroCalibStatus);
-        Serial.print("Gyroscope Calibration Status: ");  // To read out the Gyroscope Calibration Status (0-3)
-        Serial.println(gyroCalibStatus);
-
-        bno055_get_syscalib_status(&sysCalibStatus);
-        Serial.print("System Calibration Status: ");  // To read out the Magnetometer Calibration Status (0-3)
-        Serial.println(sysCalibStatus);
-
-        Serial.println();  // To separate between packets
-    }
-}
-
-void check_imu_calibration() {
+void check_imu_calibration_NDOF() {
     while (mag_calib_status != 3 || sys_calib_status != 3) {
         if ((millis() - last_time) > 200) {
             bno055_get_magcalib_status(&mag_calib_status);
@@ -76,25 +49,43 @@ void check_imu_calibration() {
     }
 }
 
+// Function to calibrate BNO055
+void check_imu_calibration() {
+    while (gyroCalibStatus != 3 || accelCalibStatus != 3) {
+        if ((millis() - last_time) > 200) {
+            bno055_get_gyrocalib_status(&gyroCalibStatus);
+            bno055_get_accelcalib_status(&accelCalibStatus);
+            Serial7.println("--- IMU Calibration Status ---");
+            Serial7.print("Gyroscope: "); Serial7.println(gyroCalibStatus);
+            Serial7.print("Accelerometer: "); Serial7.println(accelCalibStatus);
+            last_time = millis();
+        }
+    }
+    Serial.println("IMU fully calibrated!");
+}
+
 void bno055_update() {
-    // while(1){
+    static unsigned long lastUpdate = 0;
+    if (millis() - lastUpdate < 10) return;  // Limit update rate to 100 Hz
+    lastUpdate = millis();
+
     bno055_read_gyro_xyz(&gyroData);
-    gxrs = (float(gyroData.x) / 16.0);       // in degrees/second
-    gyrs = -1 * (float(gyroData.y) / 16.0);  // in degrees/second
-    gzrs = (float(gyroData.z) / 16.0);       // in degrees/second
+    // Apply simple low-pass filter to gyro data (α = 0.1)
+    gxrs = 0.9 * gxrs + 0.1 * (float(gyroData.x) / 16.0);
+    gyrs = 0.9 * gyrs + 0.1 * (float(gyroData.y) / 16.0);
+    gzrs = 0.9 * gzrs + 0.1 * (float(gyroData.z) / 16.0);
+
     bno055_read_euler_hrp(&myEulerData);
     roll = (float(myEulerData.r) / 16.00) - roll_error;
     pitch = (float(myEulerData.p) / 16.00) - pitch_error;
     yaw = (float(myEulerData.h) / 16.00);
-    if (yaw > 180.0) {
-        yaw = yaw - 360.0;
-    }
-    // yaw =yaw2;
-    yaw_sp = yaw - last_yaw;
+    if (yaw > 180.0) yaw -= 360.0;
+    
+    // Additional Low-Pass Filter for Yaw
+    yaw = 0.95 * last_yaw + 0.05 * yaw;
     last_yaw = yaw;
-    bno055_read_accel_xyz(&accelData);
-    // vertical_velocity = float(accelData.z) / 1000.0;
-    // }
+    
+    yaw_sp = yaw - last_yaw;
 }
 
 void bno055_init() {
@@ -102,11 +93,8 @@ void bno055_init() {
     Wire2.begin();
     // Initialization of the BNO055
     BNO_Init(&myBNO);  // Assigning the structure to hold information about the device
-    // Configuration to NDoF mode
-    bno055_set_operation_mode(OPERATION_MODE_NDOF);
+    // Configuration to IMUPLUS mode
+    bno055_set_operation_mode(OPERATION_MODE_IMUPLUS);
+    delay(50);
     check_imu_calibration();
-    delay(1);
-
-    // bno055_calibration();
-    // threads.addThread(bno055_update);
 }

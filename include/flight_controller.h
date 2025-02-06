@@ -17,7 +17,7 @@
 #define MAX_PITCH 25.0f
 #define MAX_YAW 25.0f
 #define MIN_PWM 1000
-#define MAX_PWM 2000
+#define MAX_PWM 1800
 #define MAX_THRUST 18.24f
 
 float u1, u2, u3, u4;
@@ -62,10 +62,10 @@ const double A_invers[4][4] = {{ 1898.32310869,  -8436.9915942,  -8436.9915942, 
 struct Gains {
     float alt = 0.0f;
     float vz = 0.0f;
-    float roll = 5.916;
-    float p = 4.144;
-    float pitch = 5.196;
-    float q = 3.341;
+    float roll = 0.0;//5.916;
+    float p = 0.0;//4.144;
+    float pitch = 3.300;
+    float q = 3.250;
     float yaw = 0.0; // 6.324
     float r = 0.0; // 1.160
 } gain;
@@ -109,11 +109,11 @@ void drone_controller() {
     alt_vel = (alt_now - alt_last) / dt;
 
     float error_roll = roll - setpoint_roll;
-    float error_roll_rate = gxrs - setpoint_roll_rate;
+    float error_roll_rate = -gyrs;
     float error_pitch = pitch - setpoint_pitch;
-    float error_pitch_rate = gyrs - setpoint_pitch_rate;
+    float error_pitch_rate = -gxrs;
     float error_yaw = yaw - setpoint_yaw;
-    float error_yaw_rate = gzrs - setpoint_yaw_rate;
+    float error_yaw_rate = -gzrs;
     float error_altitude = target_alt - altitude;
 
     /* u = -k * (state - setpoint) */
@@ -139,32 +139,10 @@ void drone_controller() {
     motor_speed_squared[2] = ((A_invers[2][0] * u1 + A_invers[2][1] * u2 + A_invers[2][2] * u3 + A_invers[2][3] * u4));
     motor_speed_squared[3] = ((A_invers[3][0] * u1 + A_invers[3][1] * u2 + A_invers[3][2] * u3 + A_invers[3][3] * u4));
 
-    // motor_speed_squared[0] = abs(motor_speed_squared[0]);
-    // motor_speed_squared[1] = abs(motor_speed_squared[1]);
-    // motor_speed_squared[2] = abs(motor_speed_squared[2]);
-    // motor_speed_squared[3] = abs(motor_speed_squared[3]);
-
-    // motor_speed[0] = sqrt(motor_speed_squared[0]);
-    // motor_speed[1] = sqrt(motor_speed_squared[1]);
-    // motor_speed[2] = sqrt(motor_speed_squared[2]);
-    // motor_speed[3] = sqrt(motor_speed_squared[3]);
-
-    // motor_speed[0] = constrain_value(motor_speed[0], MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
-    // motor_speed[1] = constrain_value(motor_speed[1], MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
-    // motor_speed[2] = constrain_value(motor_speed[2], MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
-    // motor_speed[3] = constrain_value(motor_speed[3], MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
-
-    // motor_thrust[0] = ((conversion_matrix[0][0] * u1) + (conversion_matrix[0][1] * u2) + (conversion_matrix[0][2] * u3) + (conversion_matrix[0][3] * u4));
-    // motor_thrust[1] = ((conversion_matrix[1][0] * u1) + (conversion_matrix[1][1] * u2) + (conversion_matrix[1][2] * u3) + (conversion_matrix[1][3] * u4));
-    // motor_thrust[2] = ((conversion_matrix[2][0] * u1) + (conversion_matrix[2][1] * u2) + (conversion_matrix[2][2] * u3) + (conversion_matrix[2][3] * u4));
-    // motor_thrust[3] = ((conversion_matrix[3][0] * u1) + (conversion_matrix[3][1] * u2) + (conversion_matrix[3][2] * u3) + (conversion_matrix[3][3] * u4));
-
-    // Conversion from motor speed to PWM - Calculated by viewing motor characteristics based on datasheet
-    // 1000 + (((rad/s) / 1025.38) * 1000)
-    // motor1_pwm = ch_throttle + ((motor_speed[0] / MAX_MOTOR_SPEED) * (2000 - ch_throttle));
-    // motor2_pwm = ch_throttle + ((motor_speed[1] / MAX_MOTOR_SPEED) * (2000 - ch_throttle));
-    // motor3_pwm = ch_throttle + ((motor_speed[2] / MAX_MOTOR_SPEED) * (2000 - ch_throttle));
-    // motor4_pwm = ch_throttle + ((motor_speed[3] / MAX_MOTOR_SPEED) * (2000 - ch_throttle));
+    motor_speed_squared[0] = constrain_value(motor_speed_squared[0], -200, 200);
+    motor_speed_squared[1] = constrain_value(motor_speed_squared[1], -200, 200);
+    motor_speed_squared[2] = constrain_value(motor_speed_squared[2], -200, 200);
+    motor_speed_squared[3] = constrain_value(motor_speed_squared[3], -200, 200);
 
     motor1_pwm = ch_throttle + (int)(motor_speed_squared[0]);
     motor2_pwm = ch_throttle + (int)(motor_speed_squared[1]);

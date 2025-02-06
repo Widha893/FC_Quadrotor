@@ -9,7 +9,7 @@
 #define M_CALIB false
 
 uint32_t debug_timer = 0;
-uint32_t timer_now, timer_last, dt;
+uint32_t timer_now, timer_last;
 
 void debug_data() {
     USB.print("Roll: ");
@@ -45,7 +45,13 @@ void telemetry_data() {
         TELEMETRY.print(" Pitch: ");
         TELEMETRY.print(pitch);
         TELEMETRY.print(" Yaw: ");
-        TELEMETRY.println(yaw);
+        TELEMETRY.print(yaw);
+        TELEMETRY.print(" GyroX: ");
+        TELEMETRY.print(gxrs);
+        TELEMETRY.print(" GyroY: ");
+        TELEMETRY.print(gyrs);
+        TELEMETRY.print(" GyroZ: ");
+        TELEMETRY.print(gzrs);
         TELEMETRY.print (" motor1_pwm: ");
         TELEMETRY.print(motor1_pwm);
         TELEMETRY.print (" motor2_pwm: ");
@@ -54,8 +60,8 @@ void telemetry_data() {
         TELEMETRY.print(motor3_pwm);
         TELEMETRY.print (" motor4_pwm: ");
         TELEMETRY.println(motor4_pwm);
-        // TELEMETRY.print(" motor_speed[0]: ");
-        // TELEMETRY.print(motor_speed_squared[0]);
+        // TELEMETRY.print(" ch_throttle: ");
+        // TELEMETRY.println(ch_throttle);
         // TELEMETRY.print(" motor_speed[1]: ");
         // TELEMETRY.print(motor_speed_squared[1]);
         // TELEMETRY.print(" motor_speed[2]: ");
@@ -123,7 +129,7 @@ void setup() {
     }
 
     // threads.addThread(imu_thread, 1);
-    // threads.addThread(remote_thread, 1);
+    // threads.addThread(remote_thread, 2);
     threads.addThread(telemetry_thread, 1);
     
     pinMode(LED, OUTPUT);
@@ -137,7 +143,7 @@ void loop() {
     set_control_reference();
     drone_controller();
     // thrust_check(ch_throttle);
-    // writeMotors(motor1_pwm, motor2_pwm, motor3_pwm, motor4_pwm);
+    writeMotors(motor1_pwm, motor2_pwm, motor3_pwm, motor4_pwm);
     // if (millis() % 100 == 0){
     // if ((micros - debug_timer) > 10000){
     //     telemetry_data();
