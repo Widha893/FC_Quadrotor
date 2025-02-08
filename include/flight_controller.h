@@ -26,6 +26,7 @@ float setpoint_roll, setpoint_pitch, setpoint_yaw, target_alt;
 float setpoint_roll_last, setpoint_pitch_last, setpoint_yaw_last, target_alt_last;
 float setpoint_roll_now, setpoint_pitch_now, setpoint_yaw_now, target_alt_now;
 float setpoint_roll_rate, setpoint_pitch_rate, setpoint_yaw_rate;
+float p_roll, d_roll, p_pitch, d_pitch, p_yaw, d_yaw;
 float state_yaw;
 float altitude;
 float alt_last, alt_now, alt_vel;
@@ -44,15 +45,15 @@ uint8_t t_now, t_last, dt;
 //                                {292600,  1300300, -1300300,  6283300},
 //                                {292600,  1300300,  1300300, -6283300}};
 
-// const double A_invers[4][4] = {{292600, -1300300, -1300300,  6283300},
-//                                {292600,  1300300, -1300300, -6283300},
-//                                {292600,  1300300,  1300300,  6283300},
-//                                {292600, -1300300,  1300300, -6283300}};
+const double A_invers[4][4] = {{292600, -1300300, -1300300,  6283300},
+                               {292600,  1300300, -1300300, -6283300},
+                               {292600,  1300300,  1300300,  6283300},
+                               {292600, -1300300,  1300300, -6283300}};
 
-const double A_invers[4][4] = {{ 1898.32310869,  -8436.9915942,  -8436.9915942,  36597.04602088 },
-                               { 1898.32310869,   8436.9915942,  -8436.9915942, -36597.04602088 },
-                               { 1898.32310869,   8436.9915942,   8436.9915942,  36597.04602088 },
-                               { 1898.32310869,  -8436.9915942,   8436.9915942, -36597.04602088 }};
+// const double A_invers[4][4] = {{ 1898.32310869,  -8436.9915942,  -8436.9915942,  36597.04602088 },
+//                                { 1898.32310869,   8436.9915942,  -8436.9915942, -36597.04602088 },
+//                                { 1898.32310869,   8436.9915942,   8436.9915942,  36597.04602088 },
+//                                { 1898.32310869,  -8436.9915942,   8436.9915942, -36597.04602088 }};
 
 // const double conversion_matrix[4][4] = {{ 0.25,   -0.25,   -0.25,    4.81695568},
 //                                         { 0.25,    0.25,   -0.25,   -4.81695568},
@@ -62,10 +63,10 @@ const double A_invers[4][4] = {{ 1898.32310869,  -8436.9915942,  -8436.9915942, 
 struct Gains {
     float alt = 0.0f;
     float vz = 0.0f;
-    float roll = 0.0;//5.916;
-    float p = 0.0;//4.144;
-    float pitch = 3.300;
-    float q = 3.250;
+    float roll = 5.477;//5.916; //5.477 (FINAL)
+    float p = 3.027;//4.144; //3.027 (FINAL)
+    float pitch = 1.0; //4.8 //2.1 //5.196 (FINAL)
+    float q = 1.0; //1.05 //2.7 //max 1.7 dengan p 3.00 //1.3 oke //3.341 (FINAL)
     float yaw = 0.0; // 6.324
     float r = 0.0; // 1.160
 } gain;
@@ -117,17 +118,23 @@ void drone_controller() {
     float error_altitude = target_alt - altitude;
 
     /* u = -k * (state - setpoint) */
-    float p_roll = -gain.roll * error_roll;
-    float d_roll = -gain.p * error_roll_rate;
-    float p_pitch = -gain.pitch * error_pitch;
-    float d_pitch = -gain.q * error_pitch_rate;
-    float p_yaw = -gain.yaw * error_yaw;
-    float d_yaw = -gain.r * error_yaw_rate;
+    p_roll = -gain.roll * error_roll;
+    d_roll = -gain.p * error_roll_rate;
+    p_pitch = -gain.pitch * error_pitch;
+    d_pitch = -gain.q * error_pitch_rate;
+    p_yaw = -gain.yaw * error_yaw;
+    d_yaw = -gain.r * error_yaw_rate;
+
+    // if (error_pitch < -5.0 || error_pitch > 5.0) {
+    //     d_pitch = -gain.q * error_pitch_rate;
+    // } else {
+    //     d_pitch = 0.0;
+    // }
 
     u1 = 0.0; // maximum thrust of x2216 skywalker x 4 using 1047 prop and 4s battery in newton //0.0;//(gain.alt * error_altitude) + (gain.vz * alt_vel);
-    u2 = (p_roll + d_roll)/10000.0f;
-    u3 = (p_pitch + d_pitch)/10000.0f;
-    u4 = (p_yaw + d_yaw)/10000.0f;
+    u2 = (p_roll + d_roll)/10000000.0f;
+    u3 = (p_pitch + d_pitch)/10000000.0f;
+    u4 = (p_yaw + d_yaw)/10000000.0f;
 
     // u1 = max(u1, MIN_THRUST);
     // u2 = constrain_value(u2, MIN_VALUE, MAX_VALUE);
@@ -139,10 +146,10 @@ void drone_controller() {
     motor_speed_squared[2] = ((A_invers[2][0] * u1 + A_invers[2][1] * u2 + A_invers[2][2] * u3 + A_invers[2][3] * u4));
     motor_speed_squared[3] = ((A_invers[3][0] * u1 + A_invers[3][1] * u2 + A_invers[3][2] * u3 + A_invers[3][3] * u4));
 
-    motor_speed_squared[0] = constrain_value(motor_speed_squared[0], -200, 200);
-    motor_speed_squared[1] = constrain_value(motor_speed_squared[1], -200, 200);
-    motor_speed_squared[2] = constrain_value(motor_speed_squared[2], -200, 200);
-    motor_speed_squared[3] = constrain_value(motor_speed_squared[3], -200, 200);
+    // motor_speed_squared[0] = constrain_value(motor_speed_squared[0], -200, 200);
+    // motor_speed_squared[1] = constrain_value(motor_speed_squared[1], -200, 200);
+    // motor_speed_squared[2] = constrain_value(motor_speed_squared[2], -200, 200);
+    // motor_speed_squared[3] = constrain_value(motor_speed_squared[3], -200, 200);
 
     motor1_pwm = ch_throttle + (int)(motor_speed_squared[0]);
     motor2_pwm = ch_throttle + (int)(motor_speed_squared[1]);

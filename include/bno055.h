@@ -71,9 +71,9 @@ void bno055_update() {
 
     bno055_read_gyro_xyz(&gyroData);
     // Apply simple low-pass filter to gyro data (α = 0.1)
-    gxrs = 0.9 * gxrs + 0.1 * (float(gyroData.x) / 16.0);
-    gyrs = 0.9 * gyrs + 0.1 * (float(gyroData.y) / 16.0);
-    gzrs = 0.9 * gzrs + 0.1 * (float(gyroData.z) / 16.0);
+    gxrs = (float(gyroData.x) / 16.0);
+    gyrs = (float(gyroData.y) / 16.0);
+    gzrs = (float(gyroData.z) / 16.0);
 
     bno055_read_euler_hrp(&myEulerData);
     roll = (float(myEulerData.r) / 16.00) - roll_error;
@@ -94,7 +94,7 @@ void bno055_init() {
     // Initialization of the BNO055
     BNO_Init(&myBNO);  // Assigning the structure to hold information about the device
     // Configuration to IMUPLUS mode
-    bno055_set_operation_mode(OPERATION_MODE_IMUPLUS);
+    bno055_set_operation_mode(OPERATION_MODE_NDOF);
     delay(50);
-    check_imu_calibration();
+    check_imu_calibration_NDOF();
 }
