@@ -45,11 +45,21 @@ void telemetry_data() {
         TELEMETRY.print("Time(s): ");
         TELEMETRY.print(millis()/1000.0);
         TELEMETRY.print(" ; ");
-        TELEMETRY.print(" Roll: ");
-        TELEMETRY.print(roll);
+        if (arming) {
+            TELEMETRY.print("Armed");
+        } else {
+            TELEMETRY.print("Disarmed");
+        }
+        // TELEMETRY.print(" ; ");
+        // TELEMETRY.print(" Roll: ");
+        // TELEMETRY.print(roll);
+        // TELEMETRY.print(" ; ");
+        // TELEMETRY.print(" Pitch: ");
+        // TELEMETRY.print(pitch);
+        // TELEMETRY.print(" ; ");
+        TELEMETRY.print(" Yaw: ");
+        TELEMETRY.print(yaw);
         TELEMETRY.print(" ; ");
-        // TELEMETRY.print(" Yaw: ");
-        // TELEMETRY.print(yaw);
         // TELEMETRY.print(" GyroX: ");
         // TELEMETRY.print(gxrs);
         // TELEMETRY.print(" GyroY: ");

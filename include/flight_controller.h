@@ -13,8 +13,8 @@
 #define MIN_MOTOR_SPEED 0.0f
 #define MAX_VALUE_YAW 50.0f
 #define MIN_VALUE_YAW -50.0f
-#define MAX_ROLL 25.0f
-#define MAX_PITCH 25.0f
+#define MAX_ROLL 35.0f
+#define MAX_PITCH 35.0f
 #define MAX_YAW 25.0f
 #define MIN_PWM 1000
 #define MAX_PWM 1800
@@ -55,20 +55,15 @@ const double A_invers[4][4] = {{292600, -1300300, -1300300,  6283300},
 //                                { 1898.32310869,   8436.9915942,   8436.9915942,  36597.04602088 },
 //                                { 1898.32310869,  -8436.9915942,   8436.9915942, -36597.04602088 }};
 
-// const double conversion_matrix[4][4] = {{ 0.25,   -0.25,   -0.25,    4.81695568},
-//                                         { 0.25,    0.25,   -0.25,   -4.81695568},
-//                                         { 0.25,    0.25,    0.25,    4.81695568},
-//                                         { 0.25,   -0.25,    0.25,   -4.81695568}};
-
 struct Gains {
     float alt = 0.0f;
     float vz = 0.0f;
-    float roll = 5.477;//5.916; //5.477 (FINAL)
+    float roll = 5.677;//5.916; //5.477 (FINAL)
     float p = 3.027;//4.144; //3.027 (FINAL)
-    float pitch = 1.0; //4.8 //2.1 //5.196 (FINAL)
-    float q = 1.0; //1.05 //2.7 //max 1.7 dengan p 3.00 //1.3 oke //3.341 (FINAL)
-    float yaw = 0.0; // 6.324
-    float r = 0.0; // 1.160
+    float pitch = 5.196; //4.8 //2.1 //5.196 (FINAL)
+    float q = 3.341; //1.05 //2.7 //max 1.7 dengan p 3.00 //1.3 oke //3.341 (FINAL)
+    float yaw = 3.000; // 6.324
+    float r = 1.079; // 1.160
 } gain;
 
 float constrain_value(float value, float min, float max) {
@@ -125,31 +120,15 @@ void drone_controller() {
     p_yaw = -gain.yaw * error_yaw;
     d_yaw = -gain.r * error_yaw_rate;
 
-    // if (error_pitch < -5.0 || error_pitch > 5.0) {
-    //     d_pitch = -gain.q * error_pitch_rate;
-    // } else {
-    //     d_pitch = 0.0;
-    // }
-
     u1 = 0.0; // maximum thrust of x2216 skywalker x 4 using 1047 prop and 4s battery in newton //0.0;//(gain.alt * error_altitude) + (gain.vz * alt_vel);
     u2 = (p_roll + d_roll)/10000000.0f;
     u3 = (p_pitch + d_pitch)/10000000.0f;
     u4 = (p_yaw + d_yaw)/10000000.0f;
 
-    // u1 = max(u1, MIN_THRUST);
-    // u2 = constrain_value(u2, MIN_VALUE, MAX_VALUE);
-    // u3 = constrain_value(u3, MIN_VALUE, MAX_VALUE);
-    // u4 = constrain_value(u4, MIN_VALUE_YAW, MAX_VALUE_YAW);
-
     motor_speed_squared[0] = ((A_invers[0][0] * u1 + A_invers[0][1] * u2 + A_invers[0][2] * u3 + A_invers[0][3] * u4));
     motor_speed_squared[1] = ((A_invers[1][0] * u1 + A_invers[1][1] * u2 + A_invers[1][2] * u3 + A_invers[1][3] * u4));
     motor_speed_squared[2] = ((A_invers[2][0] * u1 + A_invers[2][1] * u2 + A_invers[2][2] * u3 + A_invers[2][3] * u4));
     motor_speed_squared[3] = ((A_invers[3][0] * u1 + A_invers[3][1] * u2 + A_invers[3][2] * u3 + A_invers[3][3] * u4));
-
-    // motor_speed_squared[0] = constrain_value(motor_speed_squared[0], -200, 200);
-    // motor_speed_squared[1] = constrain_value(motor_speed_squared[1], -200, 200);
-    // motor_speed_squared[2] = constrain_value(motor_speed_squared[2], -200, 200);
-    // motor_speed_squared[3] = constrain_value(motor_speed_squared[3], -200, 200);
 
     motor1_pwm = ch_throttle + (int)(motor_speed_squared[0]);
     motor2_pwm = ch_throttle + (int)(motor_speed_squared[1]);
